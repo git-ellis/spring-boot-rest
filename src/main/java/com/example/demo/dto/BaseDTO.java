@@ -12,6 +12,7 @@ import java.util.Objects;
 
 public abstract class BaseDTO<T> {
     public abstract void copyPropsTo(T t);
+    public abstract T convert();
 
     protected void copyProperties(Object soruce, T t) {
         String[] nullProperties = this.getNullProperties(soruce);

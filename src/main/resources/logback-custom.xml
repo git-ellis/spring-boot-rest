@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<!-- 如果檔名不是logback-spring.xml，要配合logger. -->
+<configuration scan="true" scanPeriod="60 seconds" debug="true">
+
+    <!-- 設置變數，可以使用${}將值取出 -->
+    <property name="log.path" value="logs/spring-boot"/>
+    <!-- 用來區分不同的應用程序的日誌 -->
+    <contextName>Spring-Boot</contextName>
+
+    <!-- 【appender(負責打印日記的組件)】將日誌輸出到控制台-->
+    <!--
+        %d{yyyy-MM-dd HH:mm:ss.SSS} 日誌輸出時間
+        %thread     執行序名稱
+        %-5level    日誌級別，並加上5個-在左邊
+        %logger     logger的名稱
+        %msg        日誌輸出的訊息
+        %n          換行
+        %d{yyyy-MM-dd HH:mm:ss.SSS}
+        %msg
+    -->
+    <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{1} - %m%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+    </appender>
+
+    <!--    將日誌寫到文件中-->
+    <!--    <appender name="FILE" class="ch.qos.logback.core.FileAppender">-->
+    <!--        <file>123.log</file> 寫入的文件名，可以使用相對目錄或絕對目錄，如果上層目錄不存在則自動創建 -->
+    <!--        <append>true</append> true 從該log檔最後開始打印； false 清空再寫-->
+    <!--        <prudent> true 表示日誌會被安全地寫入文件，即使其他的FileAppender也在向此文件做寫入操作，效率低，默認為false-->
+    <!--        <encoder>-->
+    <!--            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>-->
+    <!--        </encoder>-->
+    <!--    </appender>-->
+
+
+    <!-- SizeBasedTriggeringPolicy(根據檔案大小)  -->
+    <!-- 滾動記錄文件，先將日誌記錄到指定文件，當符合某個條件時再將日誌記錄到其他文件-->
+    <appender name="dailyLogAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"> <!-- 滾動策略(根據時間) -->
+            <fileNamePattern>${log.path}-%d{yyyy-MM-dd}.log</fileNamePattern> <!-- 檔名 -->
+            <maxHistory>30</maxHistory> <!-- 檔案上限，如果設定每月滾動，則30個月才會開始刪舊文件 -->
+            <totalSizeCap>10MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder> <!-- 對參數進行格式化 -->
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+
+        <!--
+            ThresholdFilter的策略是，會將日誌級別小於<ERROR>的全部進行過濾，
+            因此就算logger指定了DEBUG級別，但是只有INFO及以上級別的才能被打印出來
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>ERROR</level>
+            </filter>
+        -->
+        <!--
+            LevelFilter再對logger的level進行filter
+            執行一個過濾器會有返回DENY，NEUTRAL，接受三個枚舉值中的一個。
+                DENY：日誌將立即被拋棄不再經過其他過濾器
+                NEUTRAL：有序列表裡的下個過濾器過接著處理日誌
+                ACCEPT：日誌會被立即處理，不再經過剩餘過濾器
+
+            <filter class="ch.qos.logback.classic.filter.LevelFilter">
+                <level>WARN</level>
+                <onMatch>ACCEPT</onMatch>
+                <onMismatch>DENY</onMismatch>
+            </filter>
+        -->
+    </appender>
+
+    <!--
+        异步输出
+        AsyncAppender並不處理日誌，只是將日誌緩衝到一個BlockingQueue的裡面去，
+        並在內部創建一個工作線程從隊列頭部獲取日誌，之後將獲取的日誌循環記錄到附加的其他附加器上去，
+        從而達到不阻塞主線程的效果。因此AsyncAppender僅僅充當的是事件轉發器，必須引用另外一個附加器來做事
+        <appender name ="ASYNC" class= "ch.qos.logback.classic.AsyncAppender">
+             假如等於20則表示，表示當還剩20％容量時，將丟棄TRACE，DEBUG，INFO級別的事件，
+             只保留WARN與ERROR級別的事件，為了保留所有的事件，可以將這個值設置為0，queueSize/ 5
+            <discardingThreshold>0</discardingThreshold>
+            更改默认的BlockingQueue的最大容量，該值會影響性能默認值為256
+            <queueSize>256</queueSize>
+            添加附加的appender,最多只能添加一个
+            <appender-ref ref ="ROLLING-FILE-1"/>
+        </appender>
+    -->
+
+    <!--
+        用來設置某一個package或者具體的某一個class的日誌打印級別以及指定的appender
+        name = package
+        additivity = 是否傳遞上層(default:true)
+        level = 日誌層級，若無設定，預設使用root level
+     -->
+    <logger name="com.example.demo.api.LogApi" additivity="false" level="ERROR">
+        <!-- 可以綁定多個appender -->
+        <appender-ref ref="consoleAppender"/>
+    </logger>
+<!--    <logger name="com.example.demo.api.LogApi" />-->
+
+    <!-- 也是logger，最上層的logger -->
+    <root level="INFO">
+        <appender-ref ref="dailyLogAppender"/><!-- 可以綁定多個appender -->
+        <appender-ref ref="consoleAppender"/>
+    </root>
+
+    <!-- 配合spring.profile指定 -->
+    <springProfile name="xml-dev">
+        <logger name="com.example.demo.api.LogApi" level="DEBUG"/>
+    </springProfile>
+    <springProfile name="xml-prod">
+        <logger name="com.example.demo.api.LogApi" level="ERROR"></logger>
+    </springProfile>
+</configuration>
+<!-- 想使用spring擴展配置文件支持，要以的logback-spring.xml命名，不然不須在spring設定檔中設定logging.config -->
