@@ -1,11 +1,12 @@
 package com.example.demo.dto;
 
 import com.example.demo.domain.Client;
-import com.example.demo.util.ConvertUtil;
 import org.hibernate.validator.constraints.Length;
-import org.springframework.beans.BeanUtils;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
 
 public class ClientDTO extends BaseDTO<Client> {
     @NotBlank
@@ -13,8 +14,10 @@ public class ClientDTO extends BaseDTO<Client> {
     @Email
     private String email;
     @Length(min = 3, max = 12)
+    @NotBlank
     private String password;
     @Length(min = 1, max = 1)
+    @NotBlank
     private String gender;
     @Max(100)
     @Min(1)

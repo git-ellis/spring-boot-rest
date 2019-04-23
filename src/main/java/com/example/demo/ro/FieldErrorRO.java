@@ -37,4 +37,14 @@ public class FieldErrorRO {
     public void setClassName(String className) {
         this.className = className;
     }
+
+    @Override
+    public String toString() {
+        return "FieldErrorRO{" +
+                "field='" + field + '\'' +
+                ", message='" + message + '\'' +
+                ", code='" + code + '\'' +
+                ", className='" + className + '\'' +
+                '}';
+    }
 }
